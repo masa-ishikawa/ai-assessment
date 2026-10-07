@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Assessment"
+  short_description: "調査・分析から編集可能なOracle形式PPTXまで一括作成"
+  default_prompt: "Use $ai-assessment to research the target service, run the Python assessment generator, and deliver an editable Oracle-style PowerPoint with the skill's included template."

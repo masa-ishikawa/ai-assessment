@@ -1,0 +1,38 @@
+assessment_config.py
+output/
+tmp/
+old/
+__pycache__/
+*.pyc
+.DS_Store
+.pytest_cache/
+.venv/
+.env
+.env.*
+
+# 顧客固有の入力・レビュー情報はリポジトリへ入れない。
+assessment_inputs/*
+!assessment_inputs/ISV_AI_Use_Case_Assessment_Input_Template.xlsx
+
+# ローカル作業資料・ビルド中間物
+.build/
+.ai_assessment_build/
+.ppt_edit_build/
+.codex/
+sales_session/
+static/
+/*.pptx
+/*.xlsx
+*.log
+
+# 認証・接続資材
+.oci/
+**/Wallet*/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# 記入済みのローカル検証Excel
+test/fixtures/*.xlsx
