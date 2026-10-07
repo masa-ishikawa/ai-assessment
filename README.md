@@ -37,7 +37,7 @@ flowchart LR
 3. **リージョン**：そのプロジェクトと利用モデルが使えるOCIリージョン名（例：`us-chicago-1`）。
 4. **モデルID**：そのプロジェクトで利用できるResponses API対応モデルのID。
 
-2〜4は、リポジトリのルートで `assessment_config.example.py` を `assessment_config.py` にコピーし、次の3項目を記入するのが簡単です。`assessment_config.py` はGit管理の対象外です。
+2〜4は、リポジトリのルートで `assessment_config.example.py` を `assessment_config.py` にコピーし、次の3項目を記入するのが簡単です。`assessment_config.py` はGit管理の対象外です。例ファイルのほかの項目は、既定値や別プロバイダー用の設定なので通常は変更不要です。
 
 ```python
 OCI_GENAI_PROJECT_OCID = "ocid1.generativeaiproject..."
