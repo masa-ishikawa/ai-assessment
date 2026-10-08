@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 from ai_assess_runtime.pipeline import GenerationServices, PipelineStage, PipelineState
+from ai_assess_runtime.source_input import proposal_pptx_filename
 from ai_assess_runtime.safe_io import atomic_render_immutable, atomic_write_json
 
 
@@ -1136,7 +1137,7 @@ def run_generation(args, parser, api, *, started_at: float) -> int:
         print(f"      リサーチログ: {research_path}")
         print(f"[3/3] PPTXを生成せず、凍結レビューJSONを出力しました: {json_path}")
         return 0
-    output_path = args.output or services.PPTX_OUTPUT_DIR / f"{services.safe_filename(assessment['service_name'])}_AIユースケース.pptx"
+    output_path = args.output or services.PPTX_OUTPUT_DIR / proposal_pptx_filename(assessment)
     if output_path.suffix.lower() != ".pptx":
         parser.error("--outputは.pptxファイルを指定してください。")
     output_path.parent.mkdir(parents=True, exist_ok=True)

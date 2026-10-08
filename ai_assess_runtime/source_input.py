@@ -71,6 +71,14 @@ def safe_filename(name: str) -> str:
     return re.sub(r"\s+", "_", sanitized) or "ai_assessment"
 
 
+def proposal_pptx_filename(assessment: dict) -> str:
+    """会社・製品に対応する顧客向けPPTX名を共通の規則で生成する。"""
+    company = str(assessment.get("company_name") or "提案先企業").strip()
+    company = re.sub(r"(?:\s*(?:御中|様))+$", "", company).strip() or "提案先企業"
+    service = str(assessment.get("service_name") or "対象サービス").strip() or "対象サービス"
+    return f"{safe_filename(company)}御中_{safe_filename(service)}_AI活用ご提案.pptx"
+
+
 def extract_company_name(source_text: str) -> str:
     """自由記述の入力から、表紙に表示する会社名を取得する。"""
     pattern = r"^\s*(?:会社名|企業名|顧客名|お客様名|提案先)\s*[:：]\s*(.+?)\s*$"

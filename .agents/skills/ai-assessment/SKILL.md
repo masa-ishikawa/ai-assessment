@@ -7,6 +7,11 @@ description: Run an end-to-end AI use-case assessment for a named company and pr
 
 The generator's output is the reference for both assessment content and slide composition. This skill contains its own lightweight Oracle base, authoring rules and verification workflow. Preserve the generator deck's appearance as closely as possible while correcting clipping and overlaps locally.
 
+## Output filename
+
+- Name customer-facing PPTX files `<会社名>御中_<製品名>_AI活用ご提案.pptx`, using the current assessment company and service/product names. Preserve the legal company name; remove an existing trailing `様` or `御中` before adding `御中` once. Sanitize filesystem-invalid characters. Do not append dates or internal version labels unless requested.
+- Apply this convention both to default generator output and the final Oracle-restyled deliverable in `output/final/`. An explicit user-supplied filename or `--output` path takes precedence.
+
 ## Default visual design
 
 - Use the warm color variation by default: warm white, charcoal text, Oracle red, terracotta and muted gold, with pale warm panels. The shared palette is `ai_assess_runtime/presentation_theme.py` in the active repository.

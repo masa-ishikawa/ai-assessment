@@ -76,7 +76,7 @@ def build_argument_parser(defaults: CliDefaults) -> argparse.ArgumentParser:
         default=os.getenv("OCI_RESPONSES_AUTH_MODE", "auto"),
         help="OCI Responses API認証（autoはローカル=User Principal、OCI上=Resource Principal）",
     )
-    parser.add_argument("--output", type=Path, help="PPTXの出力パス（省略時: output/pptx/）")
+    parser.add_argument("--output", type=Path, help="PPTXの出力パス（省略時: output/pptx/<会社名>御中_<製品名>_AI活用ご提案.pptx）")
     parser.add_argument("--json-only", action="store_true",
                         help="PPTXを生成せず、レビュー用assessment JSONだけを出力する")
     parser.add_argument("--output-json", type=Path,
