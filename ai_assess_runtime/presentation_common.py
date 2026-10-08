@@ -21,6 +21,7 @@ try:
 except ImportError:
     MSO_ANCHOR = MSO_AUTO_SIZE = PP_ALIGN = Pt = None  # type: ignore[assignment]
 
+from ai_assess_runtime.presentation_theme import ACCENT, ACCENTS
 from ai_assess_runtime.paths import PRIORITY_INSIGHT_IMAGE
 from ai_assess_runtime.pptx_canvas import (
     MIN_PPTX_FONT_SIZE,
@@ -79,7 +80,7 @@ PPTX_FOOTER_FONT_SIZE = PPTX_CHROME_FONT_SIZE
 # Copyrightとページ番号が重ならない10ptフッターの従来ベースライン。
 PPTX_FOOTER_BASELINE_Y = 9.0 * mm
 
-BUSINESS_VALUE_CARD_ACCENT_HEX = ("#C74634", "#367A9B", "#467653")
+BUSINESS_VALUE_CARD_ACCENT_HEX = ACCENTS
 
 ASSESSMENT_SUBSECTION_LABELS = {
     "overview": "1.2 アセスメント概要",
@@ -181,10 +182,10 @@ def draw_paragraph(deck: PptCanvas, text: str, style: ParagraphStyle,
 def draw_number_badge(deck: PptCanvas, x: float, y: float, radius: float,
                       number: object, color: colors.Color,
                       font_size: float = MIN_PPTX_FONT_SIZE) -> None:
-    """PPTXでも数字を円の中心へ収める、編集可能な丸数字を描画する。"""
+    """暖色テーマの番号を同じ領域の中央へ置く（既存図形順は保持）。"""
     font_name = "AssessmentJapaneseBold"
     deck.setFillColor(color)
-    deck.circle(x, y, radius, stroke=0, fill=1)
+    deck.circle(x, y, radius, stroke=0, fill=0)
     box = deck.slide.shapes.add_textbox(
         deck._x(x - radius), deck._y(y + radius),
         deck._width(radius * 2), deck._height(radius * 2),
@@ -202,7 +203,7 @@ def draw_number_badge(deck: PptCanvas, x: float, y: float, radius: float,
     run.font.name = PptCanvas.FONT_MAP[font_name]
     run.font.size = Pt(max(MIN_PPTX_FONT_SIZE, font_size))
     run.font.bold = True
-    run.font.color.rgb = deck._rgb(colors.white)
+    run.font.color.rgb = deck._rgb(colors.HexColor(ACCENT))
 
 
 def wide_content_width(page_width: float) -> float:

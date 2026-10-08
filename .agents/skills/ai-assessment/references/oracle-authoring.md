@@ -13,6 +13,8 @@ The separate `oracle-ppt-creator` skill is not a dependency of this workflow.
 
 ## Content and formatting
 
+- Default to the warm palette in `ai_assess_runtime/presentation_theme.py`: charcoal text, Oracle red / terracotta / muted gold accents, pale warm panels and warm table headers. Preserve these generated body colors during restyling. Prefer square cards and fine rules; retain the actual Oracle master and raster artwork.
+
 - Write direct Japanese business prose with enough explanation to stand on its own. Use varied comparisons, processes, diagrams and tables as warranted by the generator; do not force repeated cards or slogans.
 - Keep equal conditions at equal visual weight. Use Oracle red for meaningful emphasis. Do not invent customer achievements, sources, percentages or costs. Keep facts, verified external evidence and proposals distinguishable.
 - Use Meiryo UI for newly authored Japanese, Latin and numeric text, including East Asian font properties. The normal cover title is about 30pt, cover subtitle about 18pt and body title about 24pt. The assessment's stricter rule governs editable body, table, card and diagram text: at least 14pt, except the 15-case catalog at 12pt and the specified source URLs at 9pt. Preserve inherited footer settings, normally 10pt.

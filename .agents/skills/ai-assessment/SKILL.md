@@ -7,6 +7,13 @@ description: Run an end-to-end AI use-case assessment for a named company and pr
 
 The generator's output is the reference for both assessment content and slide composition. This skill contains its own lightweight Oracle base, authoring rules and verification workflow. Preserve the generator deck's appearance as closely as possible while correcting clipping and overlaps locally.
 
+## Default visual design
+
+- Use the warm color variation by default: warm white, charcoal text, Oracle red, terracotta and muted gold, with pale warm panels. The shared palette is `ai_assess_runtime/presentation_theme.py` in the active repository.
+- Preserve slide content and composition. Use square cards, thin borders/top rules, warm table headers and subtle alternating rows. Avoid unrelated blue/green/purple category colors and monochrome-only styling.
+- The native generator applies this design before Oracle restyling; retain its body colors when applying the Oracle base. Preserve actual logos, cover/closing furniture, images, footer, editable text and font floors. A different palette requires a user request.
+- Implement future design changes in the reusable drawing layer, never by customer name, slide number or copied customer artifacts.
+
 ## Source of truth
 
 - This skill is the single user-facing entry point for AI assessment work. Use `generate_assessment.py` and its active runtime behind the skill; do not present old customer decks, generic validation decks, or customer-specific build scripts as alternative workflows or deliverables.

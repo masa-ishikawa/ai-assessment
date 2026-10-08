@@ -7,6 +7,8 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 
+from ai_assess_runtime.presentation_theme import HEADER, BAND, LIGHT, warm_rgb
+
 from ai_assess_runtime.rendering_profile import (
     COMMON_CHROME_FONT_PT,
     MIN_EDITABLE_BODY_FONT_PT,
@@ -82,7 +84,7 @@ class PptCanvas:
 
     @staticmethod
     def _rgb(value: colors.Color) -> RGBColor:
-        return RGBColor(round(value.red * 255), round(value.green * 255), round(value.blue * 255))
+        return RGBColor(*warm_rgb(round(value.red * 255), round(value.green * 255), round(value.blue * 255)))
 
     def _x(self, value: float) -> Emu:
         tx, _ty, sx, _sy = self._transform
@@ -153,8 +155,9 @@ class PptCanvas:
         shape = self.slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, self._x(x), self._y(y + height), self._width(width), self._height(height))
         self._shape_style(shape, stroke, fill)
 
+    # Keep the legacy drawing signature; the default visual uses square cards.
     def roundRect(self, x: float, y: float, width: float, height: float, _radius: float, stroke: int = 1, fill: int = 0) -> None:
-        shape = self.slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, self._x(x), self._y(y + height), self._width(width), self._height(height))
+        shape = self.slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, self._x(x), self._y(y + height), self._width(width), self._height(height))
         self._shape_style(shape, stroke, fill)
 
     def circle(self, x: float, y: float, radius: float, stroke: int = 1, fill: int = 0) -> None:
@@ -227,8 +230,9 @@ class PptCanvas:
         table = shape.table
         for index, width in enumerate(widths): table.columns[index].width = self._width(width)
         for index, height in enumerate(heights): table.rows[index].height = self._height(height)
+        # Signature remains compatible; default tables share semantic theme colors.
         for row_index, values in enumerate(rows):
-            background = header_color if row_index == 0 else body_colors[min(row_index - 1, len(body_colors) - 1)]
+            background = colors.HexColor(HEADER if row_index == 0 else BAND if row_index % 2 else LIGHT)
             for column_index, value in enumerate(values):
                 cell = table.cell(row_index, column_index); cell.fill.solid(); cell.fill.fore_color.rgb = self._rgb(background)
                 cell.margin_left = cell.margin_right = Emu(round(cell_margin_mm * mm * self.POINT_TO_EMU))

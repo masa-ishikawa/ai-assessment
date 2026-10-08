@@ -2,6 +2,10 @@
 
 会社・サービスの情報から、出典を確認したAIユースケース評価と、編集可能なPowerPoint（PPTX）を作成します。入口はこのリポジトリに同梱したCodexの [`ai-assessment` スキル](.agents/skills/ai-assessment/SKILL.md)です。別のPowerPointスキルをインストールする必要はありません。
 
+## 標準デザイン
+
+PPTXは暖色カラーバリエーションを標準とします。チャコールの文字に、Oracleレッド・テラコッタ・落ち着いたゴールド、淡い暖色の背景を組み合わせます。角を立てたカード、細い罫線、暖色の表見出しで統一します。配色は `ai_assess_runtime/presentation_theme.py` で共通管理し、通常生成・保存済みJSONからの再描画の両方に適用します。Oracleの表紙・ロゴ・フッター・既存の画像は保持します。
+
 ## 全体の流れ
 
 ```mermaid

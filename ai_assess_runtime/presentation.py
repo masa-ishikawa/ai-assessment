@@ -16,6 +16,8 @@ try:
 except ImportError:
     MSO_ANCHOR = MSO_AUTO_SIZE = PP_ALIGN = Pt = None  # type: ignore[assignment]
 
+from ai_assess_runtime.presentation_theme import ACCENT, ACCENTS, PANELS, HEADER, BORDER
+
 from ai_assess_runtime.deck_plan import SlideSpec, build_default_slide_plan
 from ai_assess_runtime.display_text import normalize_public_source_title
 from ai_assess_runtime.paths import (
@@ -99,7 +101,7 @@ from ai_assess_runtime.quantitative_contract import (
 
 # 優先PoCを扱う各ページで共有する、テーマ対応用のアクセント色。順位や評価の
 # 優劣を表す色ではなく、一覧・構成・詳細の同じテーマを追えるようにする。
-POC_THEME_ACCENT_HEX = ("#467653", "#C74634", "#367A9B")
+POC_THEME_ACCENT_HEX = ACCENTS
 
 
 def _draw_pptx_cost_estimate_page(deck: PptCanvas, page_width: float, page_height: float,
@@ -334,7 +336,7 @@ def draw_fixed_architecture_reference_page(deck: PptCanvas, page_width: float, p
 
     dark, muted = colors.HexColor("#1D252C"), colors.HexColor("#4C5961")
     accents = [colors.HexColor(value) for value in POC_THEME_ACCENT_HEX]
-    fills = [colors.HexColor("#EEF4F0"), colors.HexColor("#FFF4E9"), colors.HexColor("#EDF4F8")]
+    fills = [colors.HexColor(value) for value in PANELS]
     right_x = left_x + left_width + 7 * mm
     right_w = page_width - right_x - WIDE_CONTENT_RIGHT
     deck.setFillColor(dark); deck.setFont("AssessmentJapaneseBold", 14.0)
@@ -419,7 +421,7 @@ def draw_deployment_options_page(deck: PptCanvas, page_width: float, page_height
     for index, (title, description, condition) in enumerate(cards):
         x = WIDE_CONTENT_LEFT + index * (card_w + gap)
         accent = accents[index]
-        deck.setFillColor(colors.white); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
+        deck.setFillColor(colors.HexColor(PANELS[index % len(PANELS)])); deck.setStrokeColor(colors.HexColor(BORDER)); deck.setLineWidth(0.5)
         deck.roundRect(x, card_y, card_w, card_h, 3 * mm, stroke=1, fill=1)
         deck.setFillColor(accent); deck.rect(x, card_y + card_h - 3 * mm, card_w, 3 * mm, stroke=0, fill=1)
         draw_number_badge(deck, x + 11 * mm, card_y + card_h - 14 * mm, 6 * mm, index + 1, accent, 14.0)
@@ -526,7 +528,7 @@ def _draw_pptx_poc_support_page(deck: PptCanvas, page_width: float, page_height:
     ]
     for index, (icon, title, description) in enumerate(top_cards):
         x = WIDE_CONTENT_LEFT + index * (card_w + card_gap)
-        deck.setFillColor(light); deck.roundRect(x, card_y, card_w, card_h, 2 * mm, stroke=0, fill=1)
+        deck.setFillColor(colors.HexColor(PANELS[index])); deck.roundRect(x, card_y, card_w, card_h, 2 * mm, stroke=0, fill=1)
         deck.setStrokeColor(border); deck.setLineWidth(0.8); deck.roundRect(x, card_y, card_w, card_h, 2 * mm, stroke=1, fill=0)
         # アイコンの描画原点を、スケール後の高さからカード中央へ合わせる。
         icon_scale, icon_height = 0.64, 18 * mm * 0.64
@@ -656,12 +658,6 @@ def _draw_pptx_poc_logic_detail_page(deck: PptCanvas, page_width: float, page_he
     muted = colors.HexColor("#4C5961")
     accents = [colors.HexColor(value) for value in POC_THEME_ACCENT_HEX]
     accent = accents[max(0, min(priority - 1, len(accents) - 1))]
-    flow_fills = (
-        colors.HexColor("#D3E3D8"),
-        colors.HexColor("#F3DDD8"),
-        colors.HexColor("#DCEAF1"),
-    )
-    flow_fill = flow_fills[max(0, min(priority - 1, len(flow_fills) - 1))]
     neutral_fill = colors.HexColor("#FAF9F7")
     content_x, content_w = 18 * mm, page_width - 36 * mm
     theme = _pptx_summary_text(display_theme_name(detail, poc), 48)
@@ -717,14 +713,14 @@ def _draw_pptx_poc_logic_detail_page(deck: PptCanvas, page_width: float, page_he
     for index, label in enumerate(flow_labels):
         x = content_x + box_offsets[index] * mm
         box_w = (53.3 if index == 4 else 51.6) * mm
-        deck.setFillColor(flow_fill if index < 4 else neutral_fill)
-        deck.setStrokeColor(accent); deck.setLineWidth(0.8)
+        deck.setFillColor(colors.HexColor(PANELS[index % len(PANELS)]) if index < 4 else colors.HexColor(HEADER))
+        deck.setStrokeColor(colors.HexColor(BORDER)); deck.setLineWidth(0.5)
         deck.roundRect(x, box_y, box_w, box_h, 1.5 * mm, stroke=1, fill=1)
         draw_paragraph(
             deck, label,
             ParagraphStyle(
                 f"poc_technical_flow_{index}", fontName="AssessmentJapaneseBold",
-                fontSize=14.0, leading=15.5, alignment=1, textColor=dark, wordWrap="CJK",
+                fontSize=14.0, leading=15.5, alignment=1, textColor=dark if index < 4 else colors.white, wordWrap="CJK",
             ),
             x + 1.5 * mm, box_y + box_h - 1.2 * mm, box_w - 3 * mm,
         )
@@ -1147,7 +1143,7 @@ def draw_assessment_business_impact_page(deck: PptCanvas, page_width: float, pag
                                          research: dict | None = None) -> None:
     """顧客業務価値と提供企業の事業価値を、未承認の効果値なしで接続する。"""
     dark, muted = colors.HexColor("#1D252C"), colors.HexColor("#4C5961")
-    accents = [colors.HexColor("#C74634"), colors.HexColor("#367A9B"), colors.HexColor("#B86A00")]
+    accents = [colors.HexColor(value) for value in ACCENTS]
     body = ParagraphStyle("impact_bridge_body", fontName="AssessmentJapanese", fontSize=14.0,
                           leading=16.1, textColor=muted, wordWrap="CJK")
     bold = ParagraphStyle("impact_bridge_bold", fontName="AssessmentJapaneseBold", fontSize=14.0,
@@ -1178,7 +1174,7 @@ def draw_assessment_business_impact_page(deck: PptCanvas, page_width: float, pag
         accent = accents[index]
         area = _clean_pptx_display_text(item.get("area")) or f"価値領域{index + 1}"
         kpi, formula = _business_value_measurement(area, index)
-        deck.setFillColor(colors.white); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
+        deck.setFillColor(colors.HexColor(PANELS[index % len(PANELS)])); deck.setStrokeColor(colors.HexColor(BORDER)); deck.setLineWidth(0.5)
         deck.roundRect(x, card_y, card_w, card_h, 3 * mm, stroke=1, fill=1)
         deck.setFillColor(accent); deck.rect(x, card_y + card_h - 2 * mm, card_w, 2 * mm, stroke=0, fill=1)
         draw_number_badge(deck, x + 10 * mm, card_y + card_h - 11 * mm, 5 * mm, index + 1, accent, 14.0)
@@ -1395,8 +1391,8 @@ def draw_ai_product_business_impact_page(deck: PptCanvas, page_width: float, pag
     )
     dark, muted = colors.HexColor("#1D252C"), colors.HexColor("#4C5961")
     # 色は面ではなく、価値領域を追うための細い識別子としてだけ使う。
-    accents = [colors.HexColor("#C74634"), colors.HexColor("#367A9B"), colors.HexColor("#B86A00")]
-    pale_fills = [colors.HexColor("#FFF5F1"), colors.HexColor("#F2F7FA"), colors.HexColor("#FFF8EC")]
+    accents = [colors.HexColor(value) for value in ACCENTS]
+    pale_fills = [colors.HexColor(value) for value in PANELS]
     border = colors.HexColor("#D9E0E3")
     neutral = colors.HexColor("#F6F7F8")
     body = ParagraphStyle(
@@ -1457,7 +1453,7 @@ def draw_ai_product_business_impact_page(deck: PptCanvas, page_width: float, pag
         x = WIDE_CONTENT_LEFT + index * (card_w + gap)
         top = card_y + card_h
         accent, pale_fill = accents[index], pale_fills[index]
-        deck.setFillColor(colors.white); deck.setStrokeColor(border); deck.setLineWidth(0.7)
+        deck.setFillColor(pale_fill); deck.setStrokeColor(border); deck.setLineWidth(0.5)
         deck.roundRect(x, card_y, card_w, card_h, 3 * mm, stroke=1, fill=1)
         deck.setFillColor(accent); deck.rect(x, top - 2 * mm, card_w, 2 * mm, stroke=0, fill=1)
         draw_number_badge(deck, x + 10 * mm, top - 10 * mm, 5 * mm, index + 1, accent, 14.0)
@@ -2014,7 +2010,7 @@ def draw_assessment_overview_page(deck: PptCanvas, page_width: float, page_heigh
     for index, (heading, lead, detail) in enumerate(cards):
         x = WIDE_CONTENT_LEFT + index * (card_w + gap)
         accent = accents[index]
-        deck.setFillColor(colors.white); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
+        deck.setFillColor(colors.HexColor(PANELS[index % len(PANELS)])); deck.setStrokeColor(colors.HexColor(BORDER)); deck.setLineWidth(0.5)
         deck.roundRect(x, card_y, card_w, card_h, 3 * mm, stroke=1, fill=1)
         deck.setFillColor(accent); deck.rect(x, card_y + card_h - 3 * mm, card_w, 3 * mm, stroke=0, fill=1)
         draw_number_badge(deck, x + 10 * mm, card_y + card_h - 12 * mm, 5 * mm, index + 1, accent, 14.0)
@@ -2084,7 +2080,7 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
     """15件の候補から直接選定したPoC 3テーマと、その理由を定性的に示す。"""
     dark, green = colors.HexColor("#1D252C"), colors.HexColor("#467653")
     muted = colors.HexColor("#4C5961")
-    pale_green, card_fill = colors.HexColor("#EEF4F0"), colors.white
+    pale_green = colors.HexColor("#EEF4F0")
     theme_accents = [colors.HexColor(value) for value in POC_THEME_ACCENT_HEX]
     page_title = "15のAIユースケースから整理した AI技術アプローチの代表3テーマ"
     draw_pptx_base_header(deck, page_width, page_height, page_title,
@@ -2161,14 +2157,14 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
         # 色は優先順位や評価の優劣ではなく、後続するPoC詳細ページの同じテーマを
         # たどるための視覚的な対応付けとしてだけ用いる。
         theme_accent = theme_accents[index]
-        deck.setFillColor(card_fill); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
+        deck.setFillColor(colors.HexColor(PANELS[index])); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
         deck.roundRect(x, card_y, card_width, card_h, 2 * mm, stroke=1, fill=1)
         deck.setFillColor(theme_accent); deck.rect(
-            x, card_y + card_h - 4.5 * mm, card_width, 4.5 * mm, stroke=0, fill=1,
+            x, card_y + card_h - 1.0 * mm, card_width, 1.0 * mm, stroke=0, fill=1,
         )
         column_heading_style = ParagraphStyle(
             f"default_poc_selection_column_heading_{index}", fontName="AssessmentJapaneseBold", fontSize=14,
-            leading=16.2, textColor=theme_accent, wordWrap="CJK",
+            leading=16.2, textColor=dark, wordWrap="CJK",
         )
         # 日本語本文の最終句読点だけが次行へ落ちるケースを避けるため、左右余白を
         # 3mmにそろえて可読幅を確保する。14ptと全文は維持する。
@@ -2197,6 +2193,10 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
         preparation_point = re.sub(
             r"^(?:対象[^、]{1,16}を棚卸し、|過去[^、]{1,16}について、)", "", preparation_point,
         ).replace("文書アクセス権", "アクセス権")
+        section_heading_style = ParagraphStyle(
+            f"warm_selection_section_{index}", parent=column_heading_style,
+            textColor=colors.HexColor(ACCENT),
+        )
         current_y = title_bottom - 1.0 * mm
         for heading, body in (
             ("代表とする理由", selection_reason),
@@ -2204,7 +2204,7 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
             ("準備のポイント", preparation_point),
         ):
             heading_bottom = draw_paragraph(
-                deck, heading, column_heading_style, content_x, current_y, content_width,
+                deck, heading, section_heading_style, content_x, current_y, content_width,
             )
             body_bottom = draw_paragraph(
                 deck, body, body_style, content_x, heading_bottom - 0.7 * mm, content_width,
