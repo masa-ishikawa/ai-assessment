@@ -1925,6 +1925,14 @@ def draw_use_case_list_page(deck: PptCanvas, page_width: float, page_height: flo
                 USE_CASE_LIST_PRIORITY_ICON_SIZE, USE_CASE_LIST_PRIORITY_ICON_SIZE,
                 preserveAspectRatio=True, mask="auto",
             )
+        # Show the legend only when this page actually displays priority markers.
+        # The catalog's 12pt exception keeps the one-line note above the footer.
+        deck.setFillColor(colors.HexColor("#4C5961"))
+        deck.setFont("AssessmentJapanese", 12.0)
+        deck.drawString(
+            left_margin, table_bottom - 5.5 * mm,
+            "※電球マークは、以降のスライドで詳しくご紹介する代表テーマを示しています。",
+        )
     draw_footer(deck, page_width, page_number)
 
 
