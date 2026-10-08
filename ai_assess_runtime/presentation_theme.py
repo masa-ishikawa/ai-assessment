@@ -8,6 +8,8 @@ masters are retained as authored. New layouts should use the semantic constants.
 INK = "#342D2B"
 BODY = "#514C49"
 HEADER = "#85463D"
+CONTRAST = "#633C34"
+CREAM = "#F3DFD0"
 ACCENT = "#C74634"
 BORDER = "#DEC6B8"
 BAND = "#F6E8E2"

@@ -16,7 +16,7 @@ try:
 except ImportError:
     MSO_ANCHOR = MSO_AUTO_SIZE = PP_ALIGN = Pt = None  # type: ignore[assignment]
 
-from ai_assess_runtime.presentation_theme import ACCENT, ACCENTS, PANELS, HEADER, BORDER
+from ai_assess_runtime.presentation_theme import ACCENT, ACCENTS, PANELS, HEADER, BORDER, CONTRAST, CREAM
 
 from ai_assess_runtime.deck_plan import SlideSpec, build_default_slide_plan
 from ai_assess_runtime.display_text import normalize_public_source_title
@@ -160,8 +160,8 @@ def _draw_pptx_cost_estimate_page(deck: PptCanvas, page_width: float, page_heigh
         subtitle, WIDE_CONTENT_LEFT, WIDE_EXPLANATORY_LEAD_TOP + 2 * mm, wide_content_width(page_width),
     )
 
-    # 経営判断で最初に見る合計と対象範囲を、表から独立した強調帯にする。
-    deck.setFillColor(colors.HexColor("#EEF4F0")); deck.roundRect(
+    # 合計は本文と同じ14ptとし、色面で対象範囲をまとめる。
+    deck.setFillColor(colors.HexColor(CONTRAST)); deck.roundRect(
         WIDE_CONTENT_LEFT, 127 * mm, wide_content_width(page_width), 18 * mm, 2.5 * mm, stroke=0, fill=1,
     )
     def aligned_text(text, x, y, width, height, size, color, bold=False, name=""):
@@ -180,10 +180,10 @@ def _draw_pptx_cost_estimate_page(deck: PptCanvas, page_width: float, page_heigh
         return box
 
     for text, offset, width, size, color, name in (
-        ("OCI月額利用料 合計", 6, 49, 14, green, "AI_ASSESS_COST_TOTAL_LABEL"),
-        (exact_yen(cost_estimate['total_monthly_jpy']) + "／月", 57, 58, 18, dark, "AI_ASSESS_COST_TOTAL_AMOUNT"),
+        ("OCI月額利用料 合計", 6, 49, 14, colors.HexColor(CREAM), "AI_ASSESS_COST_TOTAL_LABEL"),
+        (exact_yen(cost_estimate['total_monthly_jpy']) + "／月", 57, 58, 14, colors.white, "AI_ASSESS_COST_TOTAL_AMOUNT"),
         (f"{pricing_basis} ｜ {cost_estimate['currency']}・税抜", 119,
-         wide_content_width(page_width) / mm - 124, 14, muted, "AI_ASSESS_COST_TOTAL_BASIS"),
+         wide_content_width(page_width) / mm - 124, 14, colors.HexColor(CREAM), "AI_ASSESS_COST_TOTAL_BASIS"),
     ):
         aligned_text(text, WIDE_CONTENT_LEFT + offset * mm, 127 * mm,
                      width * mm, 18 * mm, size, color, name=name, bold=name != "AI_ASSESS_COST_TOTAL_BASIS")
@@ -191,9 +191,22 @@ def _draw_pptx_cost_estimate_page(deck: PptCanvas, page_width: float, page_heigh
     # 上端を固定して、表と下段の注記を独立した編集可能な領域へ分ける。
     table_top = 125 * mm
     table_y = table_top - sum(row_heights)
-    deck.add_table(rows, WIDE_CONTENT_LEFT, table_y, table_widths, row_heights, green,
-                  [light] * max(1, len(rows) - 2) + [colors.HexColor("#E6EBF3")], 14.0,
+    deck.add_table(rows, WIDE_CONTENT_LEFT, table_y, table_widths, row_heights, colors.HexColor("#EAE6E2"),
+                  [colors.white if i % 2 == 0 else colors.HexColor("#FAF8F5")
+                   for i in range(max(0, len(rows) - 2))] + [colors.HexColor("#EED9CB")], 14.0,
                   cell_margin_mm=1.5)
+
+    table = deck.slide.shapes[-1].table
+    for index, row in enumerate(table.rows):
+        background = ("#EAE6E2" if index == 0 else "#EED9CB" if index == len(rows) - 1
+                      else "#FFFFFF" if index % 2 else "#FAF8F5")
+        for cell in row.cells:
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = deck._rgb(colors.HexColor(background))
+            for paragraph in cell.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    run.font.color.rgb = deck._rgb(dark)
+                    run.font.bold = index in (0, len(rows) - 1)
 
     # Anchor all notes below the actual table bottom, with a visible gap.
     notes = (
@@ -205,15 +218,9 @@ def _draw_pptx_cost_estimate_page(deck: PptCanvas, page_width: float, page_heigh
     note_top = table_y - 3 * mm
     if note_top - len(notes) * (note_h + gap) < 13 * mm:
         raise ValueError("OCI cost rows exceed the footer-safe area; shorten assumptions or reduce line items before rendering")
-    note_colors = ["#EEF4F0", "#EDF4F8", "#FFF4E9"]
-    note_accents = [green, colors.HexColor("#367A9B"), colors.HexColor("#C74634")]
     for index, (heading, text) in enumerate(notes):
         x = WIDE_CONTENT_LEFT; y = note_top - note_h - index * (note_h + gap)
-        deck.setFillColor(colors.HexColor(note_colors[index]))
-        deck.roundRect(x, y, wide_content_width(page_width), note_h, 1.2 * mm, stroke=0, fill=1)
-        deck.slide.shapes[-1].name = f"AI_ASSESS_COST_NOTE_BAND_{index}"
-        deck.setFillColor(note_accents[index]); deck.rect(x, y, 33 * mm, note_h, stroke=0, fill=1)
-        aligned_text(heading, x + 4 * mm, y, 27 * mm, note_h, 14, colors.white, True,
+        aligned_text(heading, x + 4 * mm, y, 27 * mm, note_h, 14, colors.HexColor(HEADER), True,
                      f"AI_ASSESS_COST_NOTE_LABEL_{index}")
         aligned_text(text, x + 38 * mm, y, wide_content_width(page_width) - 43 * mm,
                      note_h, 14, dark, name=f"AI_ASSESS_COST_NOTE_TEXT_{index}")
@@ -2088,8 +2095,6 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
     """15件の候補から直接選定したPoC 3テーマと、その理由を定性的に示す。"""
     dark, green = colors.HexColor("#1D252C"), colors.HexColor("#467653")
     muted = colors.HexColor("#4C5961")
-    pale_green = colors.HexColor("#EEF4F0")
-    theme_accents = [colors.HexColor(value) for value in POC_THEME_ACCENT_HEX]
     page_title = "15のAIユースケースから整理した AI技術アプローチの代表3テーマ"
     draw_pptx_base_header(deck, page_width, page_height, page_title,
                           assessment_subsection_label("poc_selection"))
@@ -2119,9 +2124,7 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
     # 15件から3件へ直接選定したことと、全候補へ共通適用した観点を一つの帯で示す。
     band_x, band_y = WIDE_CONTENT_LEFT, 125 * mm
     band_w, band_h = wide_content_width(page_width), 18.5 * mm
-    deck.setFillColor(pale_green); deck.roundRect(
-        band_x, band_y, band_w, band_h, 2 * mm, stroke=0, fill=1,
-    )
+
     deck.setFillColor(green); deck.setFont("AssessmentJapaneseBold", 14.0)
     deck.drawString(band_x + 5 * mm, band_y + 9.2 * mm, "整理観点")
     criteria = ("業務価値", "既存機能との差分", "データ準備", "比較検証の成立性")
@@ -2131,7 +2134,7 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
     for index, criterion in enumerate(criteria):
         x = criteria_x + index * (criteria_w + criteria_gap)
         deck.setFillColor(colors.white); deck.setStrokeColor(colors.HexColor("#C9D8CF")); deck.setLineWidth(0.7)
-        deck.roundRect(x, band_y + 4.0 * mm, criteria_w, 10.5 * mm, 1.8 * mm, stroke=1, fill=1)
+
         deck.setFillColor(dark); deck.setFont("AssessmentJapaneseBold", 14.0)
         box = deck.slide.shapes.add_textbox(deck._x(x), deck._y(band_y + 14.5 * mm),
                                              deck._width(criteria_w), deck._height(10.5 * mm))
@@ -2153,42 +2156,41 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
     card_width = (wide_content_width(page_width) - 2 * card_gap) / 3
     card_h, card_y = 107.5 * mm, 14.0 * mm
     title_style = ParagraphStyle(
-        "default_poc_selection_card_title", fontName="AssessmentJapaneseBold", fontSize=15.0,
-        leading=18.0, textColor=dark, wordWrap="CJK",
+        "default_poc_selection_card_title", fontName="AssessmentJapaneseBold", fontSize=18.0,
+        leading=21.0, textColor=colors.white, wordWrap="CJK",
     )
     body_style = ParagraphStyle(
         "default_poc_selection_qualitative_body", fontName="AssessmentJapanese", fontSize=14,
-        leading=16.2, textColor=muted, wordWrap="CJK",
+        leading=15.0, textColor=muted, wordWrap="CJK",
     )
     for index, item in enumerate(priority_pocs_for(assessment, front)[:3]):
         x = WIDE_CONTENT_LEFT + index * (card_width + card_gap)
-        # 色は優先順位や評価の優劣ではなく、後続するPoC詳細ページの同じテーマを
-        # たどるための視覚的な対応付けとしてだけ用いる。
-        theme_accent = theme_accents[index]
-        deck.setFillColor(colors.HexColor(PANELS[index])); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
-        deck.roundRect(x, card_y, card_width, card_h, 2 * mm, stroke=1, fill=1)
+        # 同じ濃色の見出しと白い本文で、三テーマに等しい視覚的な重みを与える。
+        theme_accent = colors.HexColor(CONTRAST)
+        deck.setFillColor(colors.white); deck.setStrokeColor(colors.HexColor("#D8DEE2")); deck.setLineWidth(0.8)
+        deck.roundRect(x, card_y, card_width, card_h, 2 * mm, stroke=0, fill=1)
         deck.setFillColor(theme_accent); deck.rect(
-            x, card_y + card_h - 1.0 * mm, card_width, 1.0 * mm, stroke=0, fill=1,
+            x, card_y + card_h - 29 * mm, card_width, 29 * mm, stroke=0, fill=1,
         )
         column_heading_style = ParagraphStyle(
             f"default_poc_selection_column_heading_{index}", fontName="AssessmentJapaneseBold", fontSize=14,
-            leading=16.2, textColor=dark, wordWrap="CJK",
+            leading=16.2, textColor=colors.HexColor(CREAM), wordWrap="CJK",
         )
         # 日本語本文の最終句読点だけが次行へ落ちるケースを避けるため、左右余白を
         # 3mmにそろえて可読幅を確保する。14ptと全文は維持する。
         content_x, content_width = x + 3 * mm, card_width - 6 * mm
-        draw_number_badge(deck, content_x + 4.0 * mm, card_y + card_h - 13.0 * mm,
-                          4.0 * mm, index + 1, theme_accent, 14.0)
+        deck.setFillColor(colors.HexColor(CREAM)); deck.setFont("AssessmentJapaneseBold", 18)
+        deck.drawString(content_x + 1 * mm, card_y + card_h - 13 * mm, str(index + 1))
         detail = next((row for row in poc_logic_details_for(assessment)
                        if _matching_source_poc(row, item)), {})
         modality_label = technical_modality_for(item, detail).get("label") or "AI技術"
         draw_paragraph(
-            deck, f"技術方式｜{modality_label}", column_heading_style,
+            deck, modality_label, column_heading_style,
             content_x + 9.5 * mm, card_y + card_h - 8.3 * mm, content_width - 9.5 * mm,
         )
         title_bottom = draw_paragraph(
             deck, _pptx_summary_text(display_theme_name(detail, item), 72) or "ご提案テーマ", title_style,
-            content_x + 9.5 * mm, card_y + card_h - 16.4 * mm, content_width - 9.5 * mm,
+            content_x, card_y + card_h - 16.4 * mm, content_width,
         )
         decision_item = next((row for row in decision_items
                               if str(row.get("use_case_id") or "") == str(item.get("use_case_id") or "")
@@ -2203,9 +2205,9 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
         ).replace("文書アクセス権", "アクセス権")
         section_heading_style = ParagraphStyle(
             f"warm_selection_section_{index}", parent=column_heading_style,
-            textColor=colors.HexColor(ACCENT),
+            textColor=colors.HexColor("#514C49"),
         )
-        current_y = title_bottom - 1.0 * mm
+        current_y = min(title_bottom - 3 * mm, card_y + card_h - 34 * mm)
         for heading, body in (
             ("代表とする理由", selection_reason),
             ("PoCで確かめること", poc_focus),
@@ -2217,7 +2219,7 @@ def draw_default_poc_selection_page(deck: PptCanvas, page_width: float, page_hei
             body_bottom = draw_paragraph(
                 deck, body, body_style, content_x, heading_bottom - 0.7 * mm, content_width,
             )
-            current_y = body_bottom - 0.8 * mm
+            current_y -= 24.5 * mm
     draw_footer(deck, page_width, page_number)
 
 
